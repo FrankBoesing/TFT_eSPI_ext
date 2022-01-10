@@ -160,8 +160,94 @@ public:
     endWrite();
   }
 
+// Measure the dimensions for a single character
+void TTFmeasureChar(unsigned char c, uint* w, uint* h) {
+	if (!font) return;
+
+  *h = font->cap_height;
+  *w = 0;
+
+  if (c == 0xa0) c = ' '; // Treat non-breaking space as normal space
+
+  uint32_t bitoffset;
+  const uint8_t *data;
+
+  if (c >= font->index1_first && c <= font->index1_last) {
+    bitoffset = c - font->index1_first;
+    bitoffset *= font->bits_index;
+  }
+  else if (c >= font->index2_first && c <= font->index2_last) {
+    bitoffset = c - font->index2_first + font->index1_last - font->index1_first + 1;
+    bitoffset *= font->bits_index;
+  }
+  else if (font->unicode) {
+    return; // TODO: implement sparse unicode
+  }
+  else {
+    return;
+  }
+
+  data = font->data + fetchbits_unsigned(font->index, bitoffset, font->bits_index);
+  bitoffset = 0;
+  uint32_t encoding = fetchbits_unsigned(data, bitoffset, 3);
+
+  if (encoding != 0) return;
+
+  //uint width =
+  fetchbits_unsigned(data, bitoffset, font->bits_width);
+  //uint height =
+  fetchbits_unsigned(data, bitoffset, font->bits_height);
+  //int xoffset =
+  fetchbits_signed(data, bitoffset, font->bits_xoffset);
+  //int yoffset =
+  fetchbits_signed(data, bitoffset, font->bits_yoffset);
+  uint delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
+  *w = delta;
+}
+
+uint TTFtextWidth(const char* text, int num) {
+	uint maxH = 0;
+	uint currH = 0;
+  int i = 0;
+	char c;
+	if (num == 0) num = 0xffff;
+	while ( i < num && (c=text[i]) != 0) {
+		if (c == '\n') {
+			// For multi-line strings, retain max width
+			if (currH > maxH)
+				maxH = currH;
+			currH = 0;
+		}
+		else {
+			uint h, w;
+			TTFmeasureChar(c, &w, &h);
+			currH += w;
+		}
+    i++;
+	}
+	uint h = maxH > currH ? maxH : currH;
+	return h;
+}
+
+// Return the height of a text string
+// - num =  max characters to process, or 0 for entire string (null-terminated)
+uint16_t TTFtextHeight(const char* text, int num) {
+	int lines = 0;
+  int i = 0;
+  char c;
+	if (num == 0) num = 0xffff;
+  while ( i < num && (c=text[i]) != 0)
+	{
+		if (c == '\n') lines++;
+    i++;
+	}
+	return (lines * TTFLineSpace() + TTFontCapHeight());
+}
+
 protected:
   const tftfont_t *font = nullptr;
+	uint16_t TTFontCapHeight() { return (font) ? font->cap_height : 0; }
+	uint16_t TTFLineSpace() { return (font) ? font->line_space : 0; }
 
 private:
   inline uint fetchbit(const uint8_t *p, uint &index)

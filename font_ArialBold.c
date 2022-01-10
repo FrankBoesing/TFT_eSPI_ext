@@ -13457,6 +13457,3 @@ const ILI9341_t3_font_t Arial_96_Bold = {
 	148,
 	95
 };
-
-
-

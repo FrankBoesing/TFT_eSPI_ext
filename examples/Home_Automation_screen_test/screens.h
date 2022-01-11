@@ -15,15 +15,13 @@
 #include <font_Arial.h> // Size: 8, 11, 15
 #include <font_ArialBold.h> // Size: 8, 11, 13, 15
 
-TFT_eSPI_Button Button1;
-
 // Hints:
 //	- add tft.setRotation(1) or tft.setRotation(3) for landscape mode
 //	- for texts, you may want to specify the background color:
 //		tft.setTextColor(ForeColor, BackColor);
 //	- note, displays handle rotations differently so you may have to swap fillScreenVGradient for fillScreenHGradient
 
-// PowerPoint slide rounded rectangles will be turned into Adafruit style buttons on the TFT
+// Rounded rectangles will be turned into Adafruit buttons
 // add code for touch screen processing
 
 void Screen1(void)

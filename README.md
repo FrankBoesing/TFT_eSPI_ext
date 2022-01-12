@@ -2,6 +2,9 @@
 Extensions to the TFT_eSPI library by bodmer
 
 
+Font code mostly taken from ILI9341_t3 library by Paul Stoffregen,
+then slightly optimized.
+
 Fonts:
 
 https://github.com/PaulStoffregen/ILI9341_fonts

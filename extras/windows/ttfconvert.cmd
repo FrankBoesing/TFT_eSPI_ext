@@ -1,4 +1,7 @@
 @echo off
+rem 
+rem This batch is (c) Frank Bösing, 13.01.2022
+rem 
 setlocal ENABLEDELAYEDEXPANSION
 
 set ttf_libtype=ILI9341_t3_font_t

@@ -51,42 +51,41 @@ if "%temp%" == "" (
 for %recursive% %%i in ("%file%") do (
 
   echo Converting %%i to bdf
-  set newName=%%~pifont_%%~ni
+  set newName_c=%%~pifont_%%~ni.c
+  set newName_h=%%~pifont_%%~ni.h
 
-  if exist "!newName!.c" del "!newName!.c"
-  echo #include "font_!fname!.h">!newName!.c
-  echo,>>"!newName!.c"
+  if exist "!newName_c!" del "!newName_c!"
+  echo #include "font_!fname!.h">!newName_c!
+  echo,>>"!newName_c!"
 
-  if exist "!newName!.h" del "!newName!.h"
-  echo #pragma once>"!newName!.h"
-  echo #include "ILI9341_t3.h">>"!newName!.h"
-  echo,>>"!newName!.h"
-  echo #ifdef __cplusplus>>"!newName!.h"
-  echo extern "C" {>>"!newName!.h"
-  echo #endif>>"!newName!.h"
-  echo,>>"!newName!.h"
+  if exist "!newName_h!" del "!newName_h!"
+  echo #pragma once>"!newName_h!"
+  echo #include "ILI9341_t3.h">>"!newName_h!"
+  echo,>>"!newName_h!"
+  echo #ifdef __cplusplus>>"!newName_h!"
+  echo extern "C" {>>"!newName_h!"
+  echo #endif>>"!newName_h!"
+  echo,>>"!newName_h!"
 
   for %%p in ("%sizes:,=" "%") do (
-
       set /A n=%%~p
       "%wrk%ttf2bdf.exe" "%%i" -p !n! | "%wrk%bdf2c.exe" > %tmpfile%
       if not ERRORLEVEL 1 (
-        type %tmpfile% | find "const !ttf_libtype! ">%tmpfile%2
-        set /P f=<%tmpfile%2
+        find "const !ttf_libtype! " %tmpfile%>%tmpfile%2        
         for /F "tokens=3" %%x in (%tmpfile%2) do set fnameS=%%x
         if not "!fnameS!"=="" (
-          type %tmpfile% >>"!newName!.c"
+          type %tmpfile%>>"!newName_c!"
           echo !fnameS!
-          echo extern const !ttf_libtype! !fnameS!;>>"!newName!.h"
+          echo extern const !ttf_libtype! !fnameS!;>>"!newName_h!"
         )
       )
       set fnameS=
   )
 
-  echo,>>"!newName!.h"
-  echo #ifdef __cplusplus>>"!newName!.h"
-  echo } // extern "C">>"!newName!.h"
-  echo #endif>>"!newName!.h"
+  echo,>>"!newName_h!"
+  echo #ifdef __cplusplus>>"!newName_h!"
+  echo } // extern "C">>"!newName_h!"
+  echo #endif>>"!newName_h!"
 
 )
 

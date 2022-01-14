@@ -7,11 +7,11 @@ setlocal ENABLEDELAYEDEXPANSION
 set ttf_libtype=ILI9341_t3_font_t
 
 set wrk=%~p0
-if not exist %wrk%ttf2bdf.exe (
+if not exist "%wrk%ttf2bdf.exe" (
   echo ttf2bdf.exe missing
   goto :error
 )
-if not exist %wrk%bdf2c.exe (
+if not exist "%wrk%bdf2c.exe" (
   echo bdf2c.exe missing
   goto :error
 )
@@ -38,12 +38,12 @@ if "%~2" == "" (
 
 
 if "%temp%" == "" (
-  set tmpfile=%tmp%\~%RANDOM%.tmp
+  set tmpfile=%tmp%\ttf%RANDOM%.tmp
 ) else (
   if "%tmp%" == "" (
-    set tmpfile=.\~%RANDOM%.tmp
+    set tmpfile=.\ttf%RANDOM%.tmp
   ) else (
-    set tmpfile=%temp%\~%RANDOM%.tmp
+    set tmpfile=%temp%\ttf%RANDOM%.tmp
   )
 )
 
@@ -51,57 +51,50 @@ if "%temp%" == "" (
 for %recursive% %%i in ("%file%") do (
 
   echo Converting %%i to bdf
+  set newName=%%~pifont_%%~ni
 
-  set pfad=%%~pi
-  set fname=%%~ni
-  set ext=%%~xi
-  set tmpfile=%temp%\ttf~%RANDOM%.tmp
+  if exist "!newName!.c" del "!newName!.c"
+  echo #include "font_!fname!.h">!newName!.c
+  echo,>>"!newName!.c"
 
-  if exist !pfad!font_!fname!.c del !pfad!font_!fname!.c
-  if exist !pfad!font_!fname!.h del !pfad!font_!fname!.h
-  echo #include "font_!fname!.h">!pfad!font_!fname!.c
-  echo,>>!pfad!font_!fname!.c
-
-  echo #pragma once>!pfad!font_!fname!.h
-  echo #include "ILI9341_t3.h">>!pfad!font_!fname!.h
-  echo,>>!pfad!font_!fname!.h
-  echo #ifdef __cplusplus>>!pfad!font_!fname!.h
-  echo extern "C" {>>!pfad!font_!fname!.h
-  echo #endif>>!pfad!font_!fname!.h
-  echo,>>!pfad!font_!fname!.h
+  if exist "!newName!.h" del "!newName!.h"
+  echo #pragma once>"!newName!.h"
+  echo #include "ILI9341_t3.h">>"!newName!.h"
+  echo,>>"!newName!.h"
+  echo #ifdef __cplusplus>>"!newName!.h"
+  echo extern "C" {>>"!newName!.h"
+  echo #endif>>"!newName!.h"
+  echo,>>"!newName!.h"
 
   for %%p in ("%sizes:,=" "%") do (
-      if exist "%tmpfile%" del %tmpfile%
-      if exist "%tmpfile%2" del %tmpfile%2
 
       set /A n=%%~p
-      %wrk%ttf2bdf.exe %%i -p !n! | %wrk%bdf2c.exe > %tmpfile%
+      "%wrk%ttf2bdf.exe" "%%i" -p !n! | "%wrk%bdf2c.exe" > %tmpfile%
       if not ERRORLEVEL 1 (
         type %tmpfile% | find "const !ttf_libtype! ">%tmpfile%2
         set /P f=<%tmpfile%2
         for /F "tokens=3" %%x in (%tmpfile%2) do set fnameS=%%x
-        type %tmpfile% >> !pfad!font_!fname!.c
         if not "!fnameS!"=="" (
-          echo Size !n!: !fnameS!
-          echo extern const !ttf_libtype! !fnameS!;>>!pfad!font_!fname!.h
+          type %tmpfile% >>"!newName!.c"
+          echo !fnameS!
+          echo extern const !ttf_libtype! !fnameS!;>>"!newName!.h"
         )
       )
       set fnameS=
   )
 
-  if exist "%tmpfile%" del %tmpfile%
-  if exist "%tmpfile%2" del %tmpfile%2
-
-  echo,>>!pfad!font_!fname!.h
-  echo #ifdef __cplusplus>>!pfad!font_!fname!.h
-  echo } // extern "C">>!pfad!font_!fname!.h
-  echo #endif>>!pfad!font_!fname!.h
+  echo,>>"!newName!.h"
+  echo #ifdef __cplusplus>>"!newName!.h"
+  echo } // extern "C">>"!newName!.h"
+  echo #endif>>"!newName!.h"
 
 )
 
 goto :end
 :error
 :end
+  if exist %tmpfile% del %tmpfile%
+  if exist %tmpfile%2 del %tmpfile%2
 endlocal
 
 

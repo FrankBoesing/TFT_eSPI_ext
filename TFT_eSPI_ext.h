@@ -205,43 +205,51 @@ void TTFmeasureChar(unsigned char c, uint* w, uint* h) {
   *w = delta;
 }
 
-uint TTFtextWidth(const char* text, int num) {
-	uint maxH = 0;
-	uint currH = 0;
+// Return the width of a text string
+// optional: - num =  max characters to process
+uint TTFtextWidth(const char *text, int num = 0xffff)
+{
+  if (!font) return 0;
+  uint maxH = 0;
+  uint currH = 0;
   int i = 0;
-	char c;
-	if (num == 0) num = 0xffff;
-	while ( i < num && (c=text[i]) != 0) {
-		if (c == '\n') {
-			// For multi-line strings, retain max width
-			if (currH > maxH)
-				maxH = currH;
-			currH = 0;
-		}
-		else {
-			uint h, w;
-			TTFmeasureChar(c, &w, &h);
-			currH += w;
-		}
+  char c;
+  while (i < num && (c = text[i]) != 0)
+  {
+    if (c == '\n')
+    {
+      // For multi-line strings, retain max width
+      if (currH > maxH)
+        maxH = currH;
+      currH = 0;
+    }
+    else
+    {
+      uint h, w;
+      TTFmeasureChar(c, &w, &h);
+      currH += w;
+    }
     i++;
-	}
-	uint h = maxH > currH ? maxH : currH;
-	return h;
+  }
+  uint h = maxH > currH ? maxH : currH;
+  return h;
 }
 
 // Return the height of a text string
-// - num =  max characters to process, or 0 for entire string (null-terminated)
-uint16_t TTFtextHeight(const char* text, int num) {
-	int lines = 0;
+// optional: - num =  max characters to process
+uint TTFtextHeight(const char *text, int num = 0xffff)
+{
+  if (!font) return 0;
+  int lines = 1;
   int i = 0;
   char c;
-	if (num == 0) num = 0xffff;
-  while ( i < num && (c=text[i]) != 0)
-	{
-		if (c == '\n') lines++;
+  while (i < num && (c = text[i]) != 0)
+  {
+    if (c == '\n')
+      lines++;
     i++;
-	}
-	return (lines * TTFLineSpace() + TTFontCapHeight());
+  }
+  return ((lines-1) * font->line_space + font->cap_height);
 }
 
 protected:

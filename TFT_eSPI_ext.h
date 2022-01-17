@@ -1,5 +1,5 @@
 #pragma once
-//#include <Arduino.h> // This causes problems with Arduino Nano Connect (board package bug)
+#include <Arduino.h>
 
 typedef struct
 {
@@ -55,10 +55,10 @@ public:
     setTextFont(255);
   }
 
-  void drawFontChar(uint16_t c)
+  void drawFontChar(unsigned int c)
   {
 
-    uint32_t bitoffset;
+    uint bitoffset;
     const uint8_t *data;
 
     if (c >= font->index1_first && c <= font->index1_last)
@@ -82,29 +82,21 @@ public:
 
     data = font->data + fetchbits_unsigned(font->index, bitoffset, font->bits_index);
     bitoffset = 0;
-    uint32_t encoding = fetchbits_unsigned(data, bitoffset, 3);
+    uint encoding = fetchbits_unsigned(data, bitoffset, 3);
     if (encoding != 0)
       return;
 
-    uint32_t width = fetchbits_unsigned(data, bitoffset, font->bits_width);
-    uint32_t height = fetchbits_unsigned(data, bitoffset, font->bits_height);
+    uint width = fetchbits_unsigned(data, bitoffset, font->bits_width);
+    uint height = fetchbits_unsigned(data, bitoffset, font->bits_height);
 
-    int16_t xoffset = fetchbits_signed(data, bitoffset, font->bits_xoffset);
-    int16_t yoffset = fetchbits_signed(data, bitoffset, font->bits_yoffset);
-    uint32_t delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
-
-    if (last_cursor_x != cursor_x)
-    {
-      bg_cursor_x = cursor_x;
-    }
+    int xoffset = fetchbits_signed(data, bitoffset, font->bits_xoffset);
+    int yoffset = fetchbits_signed(data, bitoffset, font->bits_yoffset);
+    uint delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
 
     // horizontally, we draw every pixel, or none at all
     if (cursor_x < 0)
-    {
       cursor_x = 0;
-      bg_cursor_x = 0;
-    }
-    int16_t origin_x = cursor_x + xoffset;
+    int origin_x = cursor_x + xoffset;
 
     if (origin_x < 0)
     {
@@ -112,12 +104,11 @@ public:
       origin_x = 0;
     }
 
-    if (origin_x + (int16_t)width > _width)
+    if (origin_x + (int)width > _width)
     {
       if (!textwrapX)
         return;
       origin_x = 0;
-      bg_cursor_x = 0;
       if (xoffset >= 0)
       {
         cursor_x = 0;
@@ -132,28 +123,16 @@ public:
     if (cursor_y >= _height)
       return;
     cursor_x += delta;
-
-    last_cursor_x = cursor_x;
-
     if (height == 0)
-    {
-      // White space character
-      if (textcolor != textbgcolor) fillRect(bg_cursor_x, cursor_y, delta, font->line_space, textbgcolor);
-      bg_cursor_x += delta;
       return;
-    }
 
-    int16_t linecount = height;
-    uint32_t y = cursor_y + font->cap_height - height - yoffset;
-    int32_t bg_width = (origin_x  +  width) - bg_cursor_x;
-
-    // Fill top section
-    if (textcolor != textbgcolor) fillRect(bg_cursor_x, cursor_y, bg_width, y - cursor_y, textbgcolor);
+    int linecount = height;
+    uint y = cursor_y + font->cap_height - height - yoffset;
 
     startWrite();
     while (linecount)
     {
-      uint32_t xsize, bits, n, x;
+      uint xsize, bits, n, x;
 
       if (fetchbit(data, bitoffset) == 0)
       {
@@ -163,9 +142,6 @@ public:
       {
         n = 2 + fetchbits_unsigned(data, bitoffset, 3);
       }
-
-      // Fill n lines
-      if (textcolor != textbgcolor) fillRect(bg_cursor_x, y, bg_width, n, textbgcolor);
 
       x = 0;
       do
@@ -182,13 +158,10 @@ public:
       linecount -= n;
     }
     endWrite();
-    // Fill bottom section
-    if (textcolor != textbgcolor) fillRect(bg_cursor_x, y, bg_width, (cursor_y + font->line_space) - y, textbgcolor);
-    bg_cursor_x = origin_x  +  width;
   }
 
 // Measure the dimensions for a single character
-void TTFmeasureChar(unsigned char c, uint32_t* w, uint32_t* h) {
+void TTFmeasureChar(unsigned char c, uint* w, uint* h) {
 	if (!font) return;
 
   *h = font->cap_height;
@@ -220,22 +193,22 @@ void TTFmeasureChar(unsigned char c, uint32_t* w, uint32_t* h) {
 
   if (encoding != 0) return;
 
-  //uint32_t width =
+  //uint width =
   fetchbits_unsigned(data, bitoffset, font->bits_width);
-  //uint32_t height =
+  //uint height =
   fetchbits_unsigned(data, bitoffset, font->bits_height);
-  //int16_t xoffset =
+  //int xoffset =
   fetchbits_signed(data, bitoffset, font->bits_xoffset);
-  //int16_t yoffset =
+  //int yoffset =
   fetchbits_signed(data, bitoffset, font->bits_yoffset);
-  uint32_t delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
+  uint delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
   *w = delta;
 }
 
-uint32_t TTFtextWidth(const char* text, int16_t num) {
-	uint32_t maxH = 0;
-	uint32_t currH = 0;
-  int16_t i = 0;
+uint TTFtextWidth(const char* text, int num) {
+	uint maxH = 0;
+	uint currH = 0;
+  int i = 0;
 	char c;
 	if (num == 0) num = 0xffff;
 	while ( i < num && (c=text[i]) != 0) {
@@ -246,21 +219,21 @@ uint32_t TTFtextWidth(const char* text, int16_t num) {
 			currH = 0;
 		}
 		else {
-			uint32_t h, w;
+			uint h, w;
 			TTFmeasureChar(c, &w, &h);
 			currH += w;
 		}
     i++;
 	}
-	uint32_t h = maxH > currH ? maxH : currH;
+	uint h = maxH > currH ? maxH : currH;
 	return h;
 }
 
 // Return the height of a text string
 // - num =  max characters to process, or 0 for entire string (null-terminated)
-uint16_t TTFtextHeight(const char* text, int16_t num) {
-	int16_t lines = 0;
-  int16_t i = 0;
+uint16_t TTFtextHeight(const char* text, int num) {
+	int lines = 0;
+  int i = 0;
   char c;
 	if (num == 0) num = 0xffff;
   while ( i < num && (c=text[i]) != 0)
@@ -271,24 +244,20 @@ uint16_t TTFtextHeight(const char* text, int16_t num) {
 	return (lines * TTFLineSpace() + TTFontCapHeight());
 }
 
-	uint16_t TTFLineSpace() { return (font) ? font->line_space : 0; }
-
 protected:
   const tftfont_t *font = nullptr;
 	uint16_t TTFontCapHeight() { return (font) ? font->cap_height : 0; }
-
-  int32_t bg_cursor_x;
-  int32_t last_cursor_x = 0;
+	uint16_t TTFLineSpace() { return (font) ? font->line_space : 0; }
 
 private:
-  inline uint32_t fetchbit(const uint8_t *p, uint32_t &index)
+  inline uint fetchbit(const uint8_t *p, uint &index)
   {
-    uint32_t r = (p[index >> 3] & (0x80 >> (index & 7)));
+    uint r = (p[index >> 3] & (0x80 >> (index & 7)));
     index++;
     return r;
   }
 
-  uint32_t fetchbits_unsigned(const uint8_t *p, uint32_t &index, uint32_t required)
+  uint32_t fetchbits_unsigned(const uint8_t *p, uint &index, uint required)
   {
     uint32_t val;
     uint8_t *s = (uint8_t *)&p[index >> 3];
@@ -301,7 +270,7 @@ private:
     return val;
   }
 
-  int32_t fetchbits_signed(const uint8_t *p, uint32_t &index, uint32_t required)
+  int32_t fetchbits_signed(const uint8_t *p, uint &index, uint required)
   {
     uint32_t val = fetchbits_unsigned(p, index, required);
     if (val & (1 << (required - 1)))
@@ -309,12 +278,12 @@ private:
     return val;
   }
 
-  void drawFontBits(uint32_t bits, uint32_t numbits, uint32_t x, uint32_t y, uint32_t repeat)
+  void drawFontBits(uint32_t bits, uint numbits, uint x, uint y, uint repeat)
   {
     bits <<= 32 - numbits; // left align bits
     do
     {
-      uint32_t w = __builtin_clz(bits); // skip over leading zeros
+      uint w = __builtin_clz(bits); // skip over leading zeros
       if (w > numbits)
         w = numbits;
       numbits -= w;

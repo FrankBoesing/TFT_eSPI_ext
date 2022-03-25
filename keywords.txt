@@ -1,6 +1,19 @@
 TFT_eSPI_ext	KEYWORD1
 
 tftfont_t	KEYWORD2
+
 setTTFFont	KEYWORD2
+# Alternative function name to above
+setTTFont	KEYWORD2
+
 drawFontChar	KEYWORD2
+
 TTFLineSpace	KEYWORD2
+# Alternative function name to above
+TTFlineSpace	KEYWORD2
+
+TTFdestination	KEYWORD2
+
+TTFmeasureChar	KEYWORD2
+TTFtextWidth	KEYWORD2
+TTFtextHeight	KEYWORD2

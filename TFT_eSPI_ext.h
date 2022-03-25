@@ -25,11 +25,35 @@ typedef struct
 #ifdef __cplusplus
 #include <TFT_eSPI.h>
 
-#define inherited TFT_eSPI
 
 class TFT_eSPI_ext : public TFT_eSPI
 {
 public:
+  TFT_eSPI* _dest;
+  bool _useTFT = true;
+
+  // TFT_eSPI_ext(TFT_eSPI *tft)
+  TFT_eSPI_ext(void)
+  {
+    ;
+  }
+
+  ~TFT_eSPI_ext(void) { ; }
+
+  // Some of the functions used are not virtual or do not exist in both TFT and Sprite classes
+  // hence need for a _useTFT flag
+  void TTFdestination(TFT_eSPI *tft)
+  {
+    _dest = tft;
+    _useTFT = true;
+  }
+  
+  void TTFdestination(TFT_eSprite *spr)
+  {
+    _dest = spr;
+    _useTFT = false;
+  }
+
   size_t write(uint8_t c)
   {
     if (font)
@@ -46,13 +70,18 @@ public:
       return 1;
     }
     else
-      return inherited::write(c);
+      return _dest->write(c);
+  }
+
+  void setTTFont(const tftfont_t &f)
+  {
+    setTTFFont(f);
   }
 
   void setTTFFont(const tftfont_t &f)
   {
     font = &f;
-    setTextFont(255);
+    _dest->setTextFont(255);
   }
 
   void drawFontChar(uint16_t c)
@@ -93,6 +122,8 @@ public:
     int16_t yoffset = fetchbits_signed(data, bitoffset, font->bits_yoffset);
     uint32_t delta = fetchbits_unsigned(data, bitoffset, font->bits_delta);
 
+    // A background cursor is maintained to keep track of the areas with background
+    // this allows background to be drawn correctly for characters that overlap (e.g. italic).
     if (last_cursor_x != cursor_x)
     {
       bg_cursor_x = cursor_x;
@@ -138,7 +169,7 @@ public:
     if (height == 0)
     {
       // White space character
-      if (textcolor != textbgcolor) fillRect(bg_cursor_x, cursor_y, delta, font->line_space, textbgcolor);
+      if (textcolor != textbgcolor) _dest->fillRect(bg_cursor_x, cursor_y, delta, font->line_space, textbgcolor);
       bg_cursor_x += delta;
       return;
     }
@@ -148,9 +179,10 @@ public:
     int32_t bg_width = (origin_x  +  width) - bg_cursor_x;
 
     // Fill top section
-    if (textcolor != textbgcolor) fillRect(bg_cursor_x, cursor_y, bg_width, y - cursor_y, textbgcolor);
+    if (textcolor != textbgcolor) _dest->fillRect(bg_cursor_x, cursor_y, bg_width, y - cursor_y, textbgcolor);
 
-    startWrite();
+    if (_useTFT) _dest->startWrite();
+
     while (linecount)
     {
       uint32_t xsize, bits, n, x;
@@ -165,7 +197,7 @@ public:
       }
 
       // Fill n lines
-      if (textcolor != textbgcolor) fillRect(bg_cursor_x, y, bg_width, n, textbgcolor);
+      if (textcolor != textbgcolor) _dest->fillRect(bg_cursor_x, y, bg_width, n, textbgcolor);
 
       x = 0;
       do
@@ -181,9 +213,9 @@ public:
       y += n;
       linecount -= n;
     }
-    endWrite();
+    if (_useTFT) _dest->endWrite();
     // Fill bottom section
-    if (textcolor != textbgcolor) fillRect(bg_cursor_x, y, bg_width, (cursor_y + font->line_space) - y, textbgcolor);
+    if (textcolor != textbgcolor) _dest->fillRect(bg_cursor_x, y, bg_width, (cursor_y + font->line_space) - y, textbgcolor);
     bg_cursor_x = origin_x  +  width;
   }
 
@@ -279,6 +311,7 @@ uint16_t TTFtextHeight(const char *text, int num = 0xffff)
   return ((lines-1) * font->line_space + font->cap_height);
 }
 
+	uint16_t TTFlineSpace() { return (font) ? font->line_space : 0; }
 	uint16_t TTFLineSpace() { return (font) ? font->line_space : 0; }
 
 protected:
@@ -335,15 +368,16 @@ private:
           w = numbits;
         numbits -= w;
         bits <<= w;
-        setWindow(x, y, x + w - 1, y + repeat - 1); // write a block of pixels w x repeat sized
+        _dest->setWindow(x, y, x + w - 1, y + repeat - 1); // write a block of pixels w x repeat sized
         x += w;
         w *= repeat;
-        pushBlock(textcolor, w);
+
+        if (_useTFT) _dest->pushBlock(textcolor, w);
+        else while(w--) _dest->pushColor(textcolor);
       }
     } while (bits > 0 && numbits > 0);
   }
 
 };
 
-#undef inherited
 #endif

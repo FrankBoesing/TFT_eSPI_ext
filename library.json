@@ -1,6 +1,8 @@
 {
   "name": "TFT_eSPI_ext",
+
   "version": "0.1.2",
+
   "keywords": "TFT_eSPI, Arduino, tft, ePaper, display, Pico, RP2040, STM32, ESP8266, NodeMCU, ESP32, M5Stack, ILI9341, ST7735, ILI9163, S6D02A1, ILI9481, ILI9486, ILI9488, ST7789, RM68140, SSD1351, SSD1963, ILI9225, HX8357D",
   "description": "An exension to the TFT_eSPI library",
   "repository":

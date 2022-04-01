@@ -33,9 +33,10 @@ public:
   bool _useTFT = true;
 
   // TFT_eSPI_ext(TFT_eSPI *tft)
-  TFT_eSPI_ext(void)
+  TFT_eSPI_ext(TFT_eSPI *tft)
   {
-    ;
+    _dest = tft;
+    _useTFT = true;
   }
 
   ~TFT_eSPI_ext(void) { ; }
@@ -70,7 +71,23 @@ public:
       return 1;
     }
     else
+    {
       return _dest->write(c);
+    }
+  }
+
+  void setCursor(int16_t x, int16_t y)
+  {
+    cursor_x = x;
+    cursor_y = y;
+    _dest->setCursor(x, y);
+  }
+
+  void setCursor(int16_t x, int16_t y, uint8_t font)
+  {
+    cursor_x = x;
+    cursor_y = y;
+    _dest->setCursor(x, y, font);
   }
 
   void setTTFont(const tftfont_t &f)
@@ -81,7 +98,19 @@ public:
   void setTTFFont(const tftfont_t &f)
   {
     font = &f;
-    _dest->setTextFont(255);
+    //_dest->setTextFont(255);
+  }
+
+  void clearTTFont(void)
+  {
+    font = NULL;
+    //_dest->setTextFont(255);
+  }
+
+  void clearTTFFont(void)
+  {
+    font = NULL;
+    //_dest->setTextFont(255);
   }
 
   void drawFontChar(uint16_t c)
@@ -213,9 +242,11 @@ public:
       y += n;
       linecount -= n;
     }
-    if (_useTFT) _dest->endWrite();
+
     // Fill bottom section
     if (textcolor != textbgcolor) _dest->fillRect(bg_cursor_x, y, bg_width, (cursor_y + font->line_space) - y, textbgcolor);
+    if (_useTFT) _dest->endWrite();
+
     bg_cursor_x = origin_x  +  width;
   }
 

@@ -3,9 +3,10 @@ TFT_eSPI_ext	KEYWORD1
 tftfont_t	KEYWORD2
 
 setTTFFont	KEYWORD2
+clearTTFFont	KEYWORD2
 # Alternative function name to above
 setTTFont	KEYWORD2
-
+clearTTFont	KEYWORD2
 drawFontChar	KEYWORD2
 
 TTFLineSpace	KEYWORD2

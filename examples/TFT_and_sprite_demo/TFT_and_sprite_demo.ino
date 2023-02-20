@@ -20,7 +20,7 @@ TFT_eSprite  img = TFT_eSprite(&tft);
 // can call both the extension font class and the "tft" instance TFT_eSPI base class functions.
 // So tft.fillScreen(TFT_BLUE) and etft.fillScreen(TFT_BLUE) do the same thing!
 // TFT_eSPI_ext functions can only be called using the "etft" instance
-TFT_eSPI_ext etft = TFT_eSPI_ext();
+TFT_eSPI_ext etft = TFT_eSPI_ext(&tft);
 
 uint16_t ypos = 0;
   
